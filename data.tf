@@ -7,8 +7,34 @@ data "aws_iam_role" "super_admin" {
 }
 
 data "aws_iam_policy_document" "session_manager" {
+  # This policy is mostly copied from arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM version 8
+  # Some statements were removed and specific S3 bucket added to reduce privilege
   statement = {
-    sid    = "AllowConnectToSSMServer"
+    sid    = "AllowSSMActions"
+    effect = "Allow"
+
+    actions = [
+      "ssm:DescribeAssociation",
+      "ssm:DescribeDocument",
+      "ssm:GetDeployablePatchSnapshotForInstance",
+      "ssm:GetDocument",
+      "ssm:GetManifest",
+      "ssm:GetParameters",
+      "ssm:ListAssociations",
+      "ssm:ListInstanceAssociations",
+      "ssm:PutComplianceItems",
+      "ssm:PutConfigurePackageResult",
+      "ssm:PutInventory",
+      "ssm:UpdateAssociationStatus",
+      "ssm:UpdateInstanceAssociationStatus",
+      "ssm:UpdateInstanceInformation",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowEC2Messages"
     effect = "Allow"
 
     actions = [
@@ -18,27 +44,13 @@ data "aws_iam_policy_document" "session_manager" {
       "ec2messages:GetEndpoint",
       "ec2messages:GetMessages",
       "ec2messages:SendReply",
-      "ssm:DescribeAssociation",
-      "ssm:GetDeployablePatchSnapshotForInstance",
-      "ssm:GetDocument",
-      "ssm:DescribeDocument",
-      "ssm:GetManifest",
-      "ssm:GetParameters",
-      "ssm:ListAssociations",
-      "ssm:ListInstanceAssociations",
-      "ssm:PutInventory",
-      "ssm:PutComplianceItems",
-      "ssm:PutConfigurePackageResult",
-      "ssm:UpdateAssociationStatus",
-      "ssm:UpdateInstanceAssociationStatus",
-      "ssm:UpdateInstanceInformation",
     ]
 
     resources = ["*"]
   }
 
   statement = {
-    sid    = "AllowEC2InstancesToConnectToSessionManagerServer"
+    sid    = "AllowSSMMessages"
     effect = "Allow"
 
     actions = [
@@ -48,33 +60,35 @@ data "aws_iam_policy_document" "session_manager" {
       "ssmmessages:OpenDataChannel",
     ]
 
-    resources = [
-      "*",
-    ]
+    resources = ["*"]
   }
 
   statement = {
-    sid    = "AllowEC2InstancesToGetBucketEncryption"
-    effect = "Allow"
-
-    actions = [
-      "s3:GetEncryptionConfiguration",
-    ]
-
-    resources = ["${aws_s3_bucket.this.arn}"]
+    sid       = "AllowCloudWatchPutMetrics"
+    effect    = "Allow"
+    actions   = ["cloudwatch:PutMetricData"]
+    resources = ["*"]
   }
 
   statement = {
-    sid    = "AllowEC2ToStoreLogsToS3Bucket"
+    sid       = "AllowEC2DescribeInstanceStatus"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeInstanceStatus"]
+    resources = ["*"]
+  }
+
+  statement = {
+    sid    = "AllowS3Logging"
     effect = "Allow"
 
     actions = [
-      "s3:PutObject",
-      "s3:GetEncryptionConfiguration",
       "s3:AbortMultipartUpload",
-      "s3:ListMultipartUploadParts",
+      "s3:GetBucketLocation",
+      "s3:GetEncryptionConfiguration",
       "s3:ListBucket",
       "s3:ListBucketMultipartUploads",
+      "s3:ListMultipartUploadParts",
+      "s3:PutObject",
     ]
 
     resources = [
