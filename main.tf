@@ -48,11 +48,11 @@ resource "aws_ssm_document" "this" {
   content = <<DOC
 {
     "schemaVersion": "1.0",
-    "description": var.ssm_document_description,
+    "description": "${var.ssm_document_description}",
     "sessionType": "Standard_Stream",
     "inputs": {
-        "s3BucketName": local.s3_bucket_name,
-        "s3KeyPrefix": var.s3_bucket_prefix,
+        "s3BucketName": "${local.s3_bucket_name}",
+        "s3KeyPrefix": "${var.s3_bucket_prefix}",
         "s3EncryptionEnabled": true,
         "cloudWatchLogGroupName": "",
         "cloudWatchEncryptionEnabled": false
